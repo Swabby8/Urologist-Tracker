@@ -122,6 +122,8 @@ textarea{width:100%;resize:none;font-size:16px;line-height:1.45;min-height:70px}
 .chips{display:flex;flex-wrap:wrap;gap:8px;margin-top:10px}
 .chip{padding:9px 14px;border-radius:22px;border:1px solid var(--border);background:var(--surface2);font-size:14px;font-weight:500;color:var(--text);transition:all .12s}
 .chip.preset{font-family:var(--mono);font-size:14px;padding:8px 13px}
+.chips.syms2{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.syms2 .chip{padding:11px 6px;text-align:center;line-height:1.2;font-size:14px}
 .chip.sel{background:var(--accent-lt);border-color:var(--accent);color:var(--text);font-weight:700;box-shadow:0 0 0 1px var(--accent) inset}
 .yn{display:flex;gap:10px}
 .yn button{flex:1;padding:13px;border-radius:var(--rs);border:1px solid var(--border);background:var(--surface2);font-size:15px;font-weight:600;color:var(--muted)}
@@ -149,9 +151,18 @@ input[type=range].urg-range{-webkit-appearance:none;appearance:none;width:100%;h
 .toggle-link{font-size:13px;font-weight:600;color:var(--accent);padding:2px 0}
 
 /* ── Entry list ─────────────────────────────────────────── */
-.entry{display:flex;gap:12px;align-items:center;padding:13px 0;border-bottom:1px solid var(--border);width:100%;text-align:left}
-.entry:last-child{border-bottom:0;padding-bottom:2px}
-.entry:first-of-type{padding-top:2px}
+.swipe{position:relative;overflow:hidden;border-bottom:1px solid var(--border);--sx:0px}
+.swipe:last-child{border-bottom:0}
+.entry{display:flex;gap:12px;align-items:center;padding:13px 0;width:100%;text-align:left;background:var(--surface);position:relative;z-index:1;transform:translateX(var(--sx));transition:transform .22s cubic-bezier(.2,.8,.2,1);touch-action:pan-y;-webkit-user-select:none;user-select:none}
+.swipe:first-child .entry{padding-top:2px}
+.swipe:last-child .entry{padding-bottom:2px}
+.swipe.drag .entry{transition:none}
+.swipe-actions{position:absolute;top:0;right:0;bottom:0;width:156px;display:flex;visibility:hidden}
+.swipe.reveal .swipe-actions{visibility:visible}
+.swipe-actions button{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;color:#fff;font-size:13px;font-weight:700}
+.swipe-actions button svg{width:20px;height:20px}
+.swipe-actions .sa-edit{background:linear-gradient(145deg,var(--btn1),var(--btn2))}
+.swipe-actions .sa-del{background:linear-gradient(145deg,#c43a3a,#e0584f)}
 .e-time{width:68px;flex-shrink:0;font-family:var(--mono);font-size:13px;font-weight:500;color:var(--muted)}
 .e-main{flex:1;min-width:0}
 .e-amt{font-size:18px;font-weight:600;letter-spacing:-.3px}
@@ -237,7 +248,7 @@ svg.chart text{font-family:var(--sans)}
 const K_E='uro_entries_v1',K_S='uro_settings_v1',K_C='uro_cutoffs_v1',K_X='uro_last_export',K_T='uro_last_tab';
 const KINDS=['day','night','intake'];
 const MLOZ=29.5735295625;
-const SYMS=[['weak','Weak flow','🐌'],['dribble','Dribbling','💦'],['incomplete','Feeling of not emptying','🪣'],['pain','Pain or burning','🔥']];
+const SYMS=[['weak','Weak flow','🐌','Weak flow'],['dribble','Dribbling','💦','Dribbling'],['incomplete','Not empty','🪣','Feeling of not emptying'],['pain','Pain or burning','🔥','Pain or burning']];
 const DRINKS=[['Water','💧'],['Coffee','☕'],['Tea','🍵'],['Alcohol','🍷'],['Other','🥤']];
 const PRESETS={void:{ml:[100,200,300,400,500],oz:[4,8,12,16,20]},intake:{ml:[100,250,350,500,750,1000],oz:[4,8,12,16,24,32]}};
 const MON=['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
@@ -323,7 +334,8 @@ const IC={
   stats:'<path d="M5 20V10M12 20V4M19 20v-7"/>',
   gear:'<circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-1.8-.3 1.7 1.7 0 0 0-1 1.5V21a2 2 0 1 1-4 0v-.1a1.7 1.7 0 0 0-1.1-1.5 1.7 1.7 0 0 0-1.8.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.7 1.7 0 0 0 .3-1.8 1.7 1.7 0 0 0-1.5-1H3a2 2 0 1 1 0-4h.1a1.7 1.7 0 0 0 1.5-1.1 1.7 1.7 0 0 0-.3-1.8l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.7 1.7 0 0 0 1.8.3H9a1.7 1.7 0 0 0 1-1.5V3a2 2 0 1 1 4 0v.1a1.7 1.7 0 0 0 1 1.5 1.7 1.7 0 0 0 1.8-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.7 1.7 0 0 0-.3 1.8V9a1.7 1.7 0 0 0 1.5 1H21a2 2 0 1 1 0 4h-.1a1.7 1.7 0 0 0-1.5 1z"/>',
   left:'<path d="M15 6l-6 6 6 6"/>',right:'<path d="M9 6l6 6-6 6"/>',
-  down:'<path d="M12 4v11m0 0l-4-4m4 4l4-4M5 20h14"/>',up:'<path d="M12 20V9m0 0l-4 4m4-4l4 4M5 4h14"/>'
+  down:'<path d="M12 4v11m0 0l-4-4m4 4l4-4M5 20h14"/>',up:'<path d="M12 20V9m0 0l-4 4m4-4l4 4M5 4h14"/>',
+  edit:'<path d="M4 20h4L19 9a2.1 2.1 0 0 0-3-3L5 17z"/><path d="M14.5 7.5l3 3"/>',trash:'<path d="M4 7h16M10 11v6M14 11v6M6 7l1 12a2 2 0 0 0 2 2h6a2 2 0 0 0 2-2l1-12M9 7V4h6v3"/>'
 };
 const ico=n=>`<svg class="ic" viewBox="0 0 24 24" aria-hidden="true">${IC[n]}</svg>`;
 
@@ -347,7 +359,7 @@ function formHTML(k){
       <input type="range" class="urg-range" id="${k}-urgr" min="1" max="10" step="1" value="5" data-in="urg" data-k="${k}" aria-label="Urgency from 1 to 10"/>
       <div class="urg-ticks">${[1,2,3,4,5,6,7,8,9,10].map(n=>`<span>${n}</span>`).join('')}</div></div></div>
    <div class="field"><label class="flabel">Symptoms<span class="fhint">optional</span></label>
-    <div class="chips" id="${k}-syms" style="margin-top:0">${SYMS.map(([s,l,em])=>`<button class="chip" data-act="sym" data-k="${k}" data-s="${s}">${em} ${l}</button>`).join('')}</div></div>`}
+    <div class="chips syms2" id="${k}-syms" style="margin-top:0">${SYMS.map(([s,l,em])=>`<button class="chip" data-act="sym" data-k="${k}" data-s="${s}">${em} ${l}</button>`).join('')}</div></div>`}
   <div class="field"><button class="toggle-link" id="${k}-notelnk" data-act="note" data-k="${k}">+ Add note</button>
     <div id="${k}-notebox" hidden style="margin-top:8px"><textarea id="${k}-note" rows="2" placeholder="Anything worth remembering…" data-in="note" data-k="${k}"></textarea></div></div>
   <button class="btn-primary" id="${k}-save" data-act="save" data-k="${k}">Save entry</button>
@@ -467,10 +479,13 @@ function entryRow(e){
   if(e.kind==='night'&&e.woke==='N')tags.push('<span class="tag">Didn’t wake me</span>');
   (e.sym||[]).forEach(s=>{const l=SYMS.find(x=>x[0]===s);if(l)tags.push(`<span class="tag">${l[2]} ${l[1]}</span>`);});
   const ub=e.urg?`<div><div class="ub" style="background:${UC[e.urg-1][0]};color:${UC[e.urg-1][1]}">${e.urg}</div><div class="ub-cap">urgency</div></div>`:'';
-  return `<button class="entry" data-act="edit" data-k="${e.kind}" data-id="${e.id}">
+  return `<div class="swipe"><div class="swipe-actions">
+    <button class="sa-edit" data-act="redit" data-k="${e.kind}" data-id="${e.id}" aria-label="Edit entry">${ico('edit')}Edit</button>
+    <button class="sa-del" data-act="rdel" data-k="${e.kind}" data-id="${e.id}" aria-label="Delete entry">${ico('trash')}Delete</button></div>
+  <button class="entry" data-act="edit" data-k="${e.kind}" data-id="${e.id}">
     <div class="e-time">${fmt12(e.time)}</div>
     <div class="e-main"><div class="e-amt">${trimNum(e.amt)} ${e.unit}<small>${other}</small></div>
-    ${tags.length?`<div class="tags">${tags.join('')}</div>`:''}${e.note?`<div class="e-note">${esc(e.note)}</div>`:''}</div>${ub}</button>`;
+    ${tags.length?`<div class="tags">${tags.join('')}</div>`:''}${e.note?`<div class="e-note">${esc(e.note)}</div>`:''}</div>${ub}</button></div>`;
 }
 const trimNum=n=>String(Math.round(n*100)/100);
 function renderList(k){
@@ -478,8 +493,9 @@ function renderList(k){
   list.sort((a,b)=>sortKey(a).localeCompare(sortKey(b)));
   $(k+'-ltitle').textContent=k==='night'?'Night of '+fmtNight(p):fmtDay(p);
   $(k+'-lcount').textContent=list.length?list.length+(list.length===1?' entry':' entries'):'';
+  openRow=null;
   $(k+'-list').innerHTML=list.length?list.map(entryRow).join(''):
-    `<div class="empty"><span class="em">${k==='intake'?'💧':k==='night'?'🌙':'☀️'}</span>Nothing logged yet.<br>Entries you save will show up here — tap one to edit.</div>`;
+    `<div class="empty"><span class="em">${k==='intake'?'💧':k==='night'?'🌙':'☀️'}</span>Nothing logged yet.<br>Entries you save will show up here — swipe left on one to edit or delete.</div>`;
 }
 function renderCutoff(){
   const p=curPeriod('intake'),c=cutoffs[p];
@@ -713,7 +729,7 @@ function summaryText(R){
   f('Liquid intake per day',R.avgIn!==null?fmtMl(R.avgIn)+' ml':null);
   f('Share of output at night',R.nightShare!==null?Math.round(R.nightShare*100)+'%':null);
   f('Average last drink of the evening',R.avgCut!==null?fmtMinutes(R.avgCut):null);
-  if(R.nVoids)L.push('Symptoms (share of voids): '+SYMS.map(([k,l])=>l+' '+Math.round(R.sym[k]/R.nVoids*100)+'%').join(', '));
+  if(R.nVoids)L.push('Symptoms (share of voids): '+SYMS.map(([k,l,em,full])=>full+' '+Math.round(R.sym[k]/R.nVoids*100)+'%').join(', '));
   return L.join('\n');
 }
 function renderStats(){
@@ -909,6 +925,9 @@ const ACT={
   cancel:t=>{resetForm(t.dataset.k);},
   del:t=>delEntry(t.dataset.k),
   edit:t=>editEntry(t.dataset.k,t.dataset.id),
+  redit:t=>{closeSwipe(true);editEntry(t.dataset.k,t.dataset.id);},
+  rdel:t=>{const k=t.dataset.k,id=t.dataset.id;if(!confirm('Delete this entry?'))return;
+    entries=entries.filter(e=>e.id!==id);persist();if(F[k]&&F[k].editId===id)resetForm(k);render();},
   cutsave:()=>{const v=getTimeField('cut');if(!v){const b=$('cut-save');b.textContent='Enter a time first';b.classList.add('err');setTimeout(()=>{b.classList.remove('err');renderCutoff();},1400);return;}
     cutoffs[curPeriod('intake')]=v;persist();render();},
   cutclear:()=>{delete cutoffs[curPeriod('intake')];persist();render();},
@@ -918,6 +937,46 @@ const ACT={
   wipe:()=>{if(!confirm('Delete ALL entries and cut-offs on this phone? This cannot be undone.'))return;if(!confirm('Really delete everything? Export first if you want a copy.'))return;
     entries=[];cutoffs={};persist();try{localStorage.removeItem(K_X);}catch(e){}KINDS.forEach(resetForm);render();}
 };
+/* ── swipe-left row actions ── */
+let openRow=null,SW=null,lastDrag=0;const SWW=156;
+function closeSwipe(now){
+  const r=openRow;if(!r)return;openRow=null;r.classList.remove('open');r.style.setProperty('--sx','0px');
+  if(now)r.classList.remove('reveal');else setTimeout(()=>{if(r!==openRow)r.classList.remove('reveal');},240);
+}
+document.addEventListener('pointerdown',e=>{
+  const en=e.target.closest&&e.target.closest('.swipe .entry');
+  if(!en){SW=null;return;}
+  const row=en.parentElement;
+  SW={row,x:e.clientX,y:e.clientY,base:row.classList.contains('open')?-SWW:0,drag:false,id:e.pointerId,en,x0:e.clientX,t0:Date.now()};
+});
+document.addEventListener('pointermove',e=>{
+  if(!SW||e.pointerId!==SW.id)return;
+  const dx=e.clientX-SW.x,dy=e.clientY-SW.y;
+  if(!SW.drag){
+    if(Math.abs(dx)<8||Math.abs(dx)<Math.abs(dy)*1.2){if(Math.abs(dy)>12)SW=null;return;}
+    SW.drag=true;if(openRow&&openRow!==SW.row)closeSwipe();
+    SW.row.classList.add('drag','reveal');try{SW.en.setPointerCapture(e.pointerId);}catch(x){}
+  }
+  const x=Math.max(-SWW-24,Math.min(0,SW.base+dx));
+  SW.row.style.setProperty('--sx',(x<-SWW?-SWW+(x+SWW)*.35:x)+'px');SW.cur=x;
+});
+function endSwipe(e){
+  if(!SW||e.pointerId!==SW.id)return;
+  const S=SW;SW=null;if(!S.drag)return;
+  lastDrag=Date.now();S.row.classList.remove('drag');
+  const v=(e.clientX-S.x0)/Math.max(1,Date.now()-S.t0),open=S.cur<-SWW*.4||v<-.5?!(v>.5):false;
+  if(open){openRow=S.row;S.row.classList.add('open','reveal');S.row.style.setProperty('--sx',-SWW+'px');}
+  else{openRow=S.row;closeSwipe();}
+}
+document.addEventListener('pointerup',endSwipe);
+document.addEventListener('pointercancel',e=>{if(SW&&SW.drag)endSwipe(e);else SW=null;});
+document.addEventListener('click',e=>{
+  if(Date.now()-lastDrag<350){e.preventDefault();e.stopImmediatePropagation();return;}
+  if(openRow){
+    const a=e.target.closest('.swipe-actions'),en=e.target.closest('.swipe .entry');
+    if(!a){closeSwipe();if(en){e.stopImmediatePropagation();return;}}
+  }
+});
 document.addEventListener('click',e=>{
   const t=e.target.closest('[data-act]');
   if(t&&ACT[t.dataset.act]){ACT[t.dataset.act](t,e);return;}
