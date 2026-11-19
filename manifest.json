@@ -1,0 +1,14 @@
+{
+  "name": "Urologist Tracker",
+  "short_name": "Uro Tracker",
+  "description": "Private bladder diary: day, night and liquid intake logging with stats and CSV export.",
+  "start_url": "./",
+  "scope": "./",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#0b5f8a",
+  "theme_color": "#0b5f8a",
+  "icons": [
+    { "src": "icon.png", "sizes": "512x512", "type": "image/png", "purpose": "any" }
+  ]
+}
